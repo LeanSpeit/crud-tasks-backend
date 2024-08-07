@@ -1,4 +1,4 @@
-const { newConnection } = require("../base_Datos/baseDatos")
+const { newConnection } = require("../dataBase/baseDatos")
 
 
 
@@ -23,15 +23,27 @@ async function getById(req, res){
     }
 
 //agregar tarea
-async function addTasks(req, res){
-    const connection = await newConnection()
+async function addTasks(req, res) {
+    try {
+        const connection = await newConnection();
 
-    const {title, description, isComplete} = req.body
-    const result = await connection.query("INSERT INTO tasks (`title`, `description`, `isComplete`) values (?, ?, ?)", [title, description, isComplete])
+        const { title, description, isComplete } = req.body;
 
-    res.json({msg: "Se agregó una nueva tarea"});
+        // Validación para que el título y la descripción no sean cadenas vacías
+        if (title.trim() === "" || description.trim() === "") {
+            res.status(400).json({ msg: "El título y la descripción no pueden estar vacíos" });
+            return;
+        }
 
-    connection.end()
+        const result = await connection.query("INSERT INTO tasks (title, description, isComplete) values (?, ?, ?)", [title, description, isComplete]);
+
+        res.json({ msg: "Se agregó la nueva tarea" });
+
+        connection.end();
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ msg: "Ocurrió un problema en el servidor" });
+    }
 }
 
 //editar tarea por id 
